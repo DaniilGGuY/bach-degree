@@ -1,45 +1,42 @@
-from graph import Graph
-from eps_method import EpsilonMethods
-from weighted_sum import WeightedSumMethod
-from user_query import UserQuery
+from models.graph import Graph
+from methods.eps_method import EpsilonMethods
+from methods.weighted_sum_method import WeightedSumMethod
+from methods.pareto import get_pareto_front
+from models.user_query import UserQuery
 
 if __name__ == "__main__":
     graph = Graph("data/flights.csv")
-    query = UserQuery.from_json("queries/rq.json")
+    user_query = UserQuery.from_json("queries/moscow_ufa.json")
 
-    print("=" * 70)
-    print(f"Запрос пользователя:")
-    print(f"   Маршрут: {query.departure} → {query.arrival}")
-    print(f"   Дата/время: {query.datetime}")
-    print(f"   Веса: w1={query.w1}, w2={query.w2}, w3={query.w3}")
-    print("=" * 70)
+    origin = user_query.departure
+    destination = user_query.arrival
+    travel_date = user_query.datetime.date()
+    desired_time = user_query.datetime
+    w1, w2, w3 = user_query.w1, user_query.w2, user_query.w3
 
-    if not query.validate():
-        exit(1)
+    all_routes = graph.get_all_routes(origin, destination, travel_date, desired_time, max_transfers=1)
+    eps_method = EpsilonMethods(all_routes)
+    weight_method = WeightedSumMethod(all_routes)
 
-    travel_date = query.datetime.date()
-    desired_time = query.datetime
+    print(f"\nВСЕГО НАЙДЕНО МАРШРУТОВ: {len(all_routes)}")
 
-    # ===== 1. Метод взвешенной суммы (использует веса) =====
-    weighted = WeightedSumMethod(graph)
-    best = weighted.find_best_route(
-        query.departure, query.arrival, travel_date, desired_time,
-        query.w1, query.w2, query.w3, max_transfers=1
-    )
+    pareto_front = get_pareto_front(all_routes)
 
-    if best:
-        print(f"\n⭐ ЛУЧШИЙ МАРШРУТ (по взвешенной сумме):")
-        print(f"   {best}")
-        print(f"   Оценка: {query.w1}×цена + {query.w2}×время + {query.w3}×отклонение")
-    else:
-        print("\n⚠️ Маршрутов не найдено")
-
-    # ===== 2. Адаптивный ε-метод (Парето-фронт) =====
-    methods = EpsilonMethods(graph, debug=False)
-    pareto = methods.adaptive_epsilon(
-        query.departure, query.arrival, travel_date, desired_time, max_levels=3
-    )
-
-    print(f"\n🏆 ПАРЕТО-ФРОНТ ({len(pareto)} маршрутов):")
-    for r in pareto:
+    print(f"\nПАРЕТО-ФРОНТ: {len(pareto_front)} маршрутов")
+    for r in pareto_front:
         print(f"   {r}")
+
+    print("\nВЗВЕШЕННАЯ СУММА: ТОП-5 маршрутов")
+    best_routes = weight_method.find_best_routes(w1, w2, w3)
+    for r in best_routes:
+        print(f"    {r}")
+
+    print("\nКЛАССИЧЕСКИЙ ЭПСИЛОН МЕТОД:")
+    best_routes_eps = eps_method.classic_epsilon(w1, w2, w3)
+    for r in best_routes_eps:
+        print(f"    {r}")
+
+    print("\nАДАПТИВНЫЙ ЭПСИЛОН МЕТОД:")
+    best_routes_ad = eps_method.adaptive_epsilon(w1, w2, w3)
+    for r in best_routes_ad:
+        print(f"    {r}")

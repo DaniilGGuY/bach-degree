@@ -45,4 +45,3 @@ if __name__ == '__main__':
     plt.title('Зависимость времени адаптивного метода от глубины', fontsize=14)
     plt.grid(True, alpha=0.3)
     plt.show()
-    
