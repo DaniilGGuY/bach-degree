@@ -1,8 +1,3 @@
-from typing import List, TypeVar
-
-T = TypeVar('T')
-
-
 # Доминирует ли route1 над route2
 def is_dominated(route1, route2):
     c1_cost, c1_dur, c1_dev = route1.get_criteria()

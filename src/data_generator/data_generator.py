@@ -183,7 +183,7 @@ def generate_all_possible_flights():
 
 
 # СОХРАНЕНИЕ В CSV
-def save_to_csv(flights, filename="../data/flights.csv"):
+def save_to_csv(flights, filename="../data/flights_base.csv"):
     with open(filename, mode='w', newline='', encoding='utf-8') as file:
         fieldnames = ["id", "departure", "arrival", "time_departure",
                       "duration_minutes", "recurrence_every_n_days", "base_date",
@@ -233,5 +233,5 @@ if __name__ == "__main__":
     print("-" * 60)
     all_flights = generate_all_possible_flights()
     print(f"Создано {len(all_flights)} перелётов")
-    save_to_csv(all_flights, "../data/flights.csv")
+    save_to_csv(all_flights, "../data/flights_base.csv")
     print_statistics(all_flights)
